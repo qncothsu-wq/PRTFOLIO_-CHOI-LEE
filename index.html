@@ -341,7 +341,10 @@
     <div class="panel">
       <div class="panel-head">
         <h2>📝 현재 총 <b class="hl hl-1">납입금액</b> &amp; <b class="hl hl-2">평가금액</b></h2>
-        <span class="period-chip" id="entryPeriodLabel"></span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn small" id="loadPrevMonthBtn" title="지난달에 입력한 값을 이번 달로 복사해와요 (지난달 데이터는 그대로 유지돼요)">⬅ 지난달 값 불러오기</button>
+          <span class="period-chip" id="entryPeriodLabel"></span>
+        </div>
       </div>
       <div class="panel-body">
         <div id="entryTableWrap"></div>
@@ -605,6 +608,22 @@
     return {principal, value, pnl: value-principal, byType};
   }
 
+  // like computeSnapshot, but no carry-forward from previous months —
+  // only counts what's actually entered for this exact month
+  function computeSnapshotStrict(y,m){
+    let principal=0, value=0;
+    const bucket = (state.records[y] && state.records[y][m]) || {};
+    state.assets.forEach(a=>{
+      if(!isAssetActiveAt(a,y,m)) return;
+      const rec = bucket[a.id];
+      if(!rec) return;
+      const p = rec.contribution || 0;
+      const v = rec.value !== undefined ? rec.value : p;
+      principal += p; value += v;
+    });
+    return {principal, value, pnl: value-principal};
+  }
+
   function prevYM(y,m){ m--; if(m===0){m=12;y--;} return [y,m]; }
 
   // sums strictly by entered 평가금액(value) — no principal fallback
@@ -684,7 +703,7 @@
   function renderEntrySummaryStrip(){
     const el = document.getElementById("entrySummaryStrip");
     if(state.assets.length===0){ el.innerHTML = ""; return; }
-    const snap = computeSnapshot(curYear, curMonth);
+    const snap = computeSnapshotStrict(curYear, curMonth);
     el.innerHTML = `<div class="strip">
       <div class="cell"><div class="label">총 납입금액</div><div class="val" style="color:var(--muted)">${fmt(snap.principal)}</div></div>
       <div class="cell"><div class="label">총 평가금액</div><div class="val">${fmt(snap.value)}</div></div>
@@ -711,8 +730,8 @@
 
   function renderEntryTable(){
     const wrap = document.getElementById("entryTableWrap");
-    const visibleAssets = state.assets.filter(a => isAssetActiveAt(a, curYear, curMonth));
-    const hiddenCount = state.assets.length - visibleAssets.length;
+    const bucket = ensureBucket(curYear, curMonth);
+    const visibleAssets = state.assets.filter(a => isAssetActiveAt(a, curYear, curMonth) && bucket[a.id] !== undefined);
     if(state.assets.length===0){
       wrap.innerHTML = `<div class="empty">
         <div class="glyph">🐷</div>
@@ -723,14 +742,10 @@
     if(visibleAssets.length===0){
       wrap.innerHTML = `<div class="empty">
         <div class="glyph">🐷</div>
-        <div class="msg">이 달에는 표시되는 자산이 없습니다.<br>다른 달의 자산을 이 달부터 보이게 당겨오거나, 제외 처리를 되돌릴 수 있어요.</div>
-        <button class="btn primary" id="pullStartBtn">이 달부터 자산 보이게 하기</button>
+        <div class="msg">이 달에는 아직 입력한 자산이 없습니다.<br>위의 "⬅ 지난달 값 불러오기"를 누르거나, 새 항목을 추가해보세요.</div>
       </div>`;
-      const btn = document.getElementById("pullStartBtn");
-      if(btn) btn.addEventListener("click", pullHiddenAssetsToMonth);
       return;
     }
-    const bucket = ensureBucket(curYear, curMonth);
     let rows = "";
     visibleAssets.forEach(a=>{
       const rec = bucket[a.id] || {deposit:"", contribution:"", value:""};
@@ -769,22 +784,13 @@
         </td>
       </tr>`;
     });
-    const hiddenNote = hiddenCount>0
-      ? `<div style="margin-top:12px;font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:8px">
-          이 달에는 보이지 않는 자산이 ${hiddenCount}개 더 있어요 (다른 달 시작 또는 제외됨).
-          <button class="btn small" id="pullStartBtn2">이 달부터 모두 보이기</button>
-        </div>`
-      : "";
     wrap.innerHTML = `<table style="table-layout:auto">
       <thead><tr>
         <th></th><th>자산명</th><th>구분</th><th>월별 납입금액</th><th>현재 총 납입금액</th><th>현재 총 평가금액</th>
         <th></th>
       </tr></thead>
       <tbody>${rows}</tbody>
-    </table>${hiddenNote}`;
-
-    const pullBtn2 = document.getElementById("pullStartBtn2");
-    if(pullBtn2) pullBtn2.addEventListener("click", pullHiddenAssetsToMonth);
+    </table>`;
 
     wrap.querySelectorAll("input[data-field]").forEach(inp=>{
       attachAmountFormatting(inp);
@@ -914,10 +920,43 @@
     const typeInp = document.getElementById("newType");
     const name = nameInp.value.trim();
     if(!name) { nameInp.focus(); return; }
-    state.assets.push({ id: "a"+Date.now()+Math.random().toString(36).slice(2,6), name, type: typeInp.value, startY: curYear, startM: curMonth });
+    const newAsset = { id: "a"+Date.now()+Math.random().toString(36).slice(2,6), name, type: typeInp.value, startY: curYear, startM: curMonth };
+    state.assets.push(newAsset);
+    ensureBucket(curYear, curMonth)[newAsset.id] = {};
     nameInp.value = "";
     save(); renderAll();
   });
+
+  function loadPreviousMonthValues(){
+    const [py, pm] = prevYM(curYear, curMonth);
+    const prevBucket = (state.records[py] && state.records[py][pm]) || {};
+    const bucket = ensureBucket(curYear, curMonth);
+    const visibleAssets = state.assets.filter(a => isAssetActiveAt(a, curYear, curMonth));
+    let copied = 0;
+    visibleAssets.forEach(a=>{
+      const prevRec = prevBucket[a.id];
+      if(!prevRec) return;
+      if(!bucket[a.id]) bucket[a.id] = {};
+      const cur = bucket[a.id];
+      ["deposit","contribution","value"].forEach(field=>{
+        if(cur[field] === undefined && prevRec[field] !== undefined){
+          cur[field] = prevRec[field];
+          copied++;
+        }
+      });
+    });
+    const btn = document.getElementById("loadPrevMonthBtn");
+    if(copied > 0){
+      save();
+      renderAll();
+    } else if(btn){
+      const original = btn.textContent;
+      btn.textContent = "불러올 지난달 데이터가 없어요";
+      setTimeout(()=>{ if(btn) btn.textContent = original; }, 1600);
+    }
+  }
+
+  document.getElementById("loadPrevMonthBtn").addEventListener("click", loadPreviousMonthValues);
 
   // ================= TAB 2: YEARLY =================
   function yearsWithData(){
