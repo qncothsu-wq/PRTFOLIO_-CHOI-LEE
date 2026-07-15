@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PORTFOLIO — 우리집 포트폴리오</title>
+<style>
+  :root{
+    --bg:#F1EEF3;
+    --surface:#FFFFFF;
+    --surface-2:#F8F6FA;
+    --line:#E7DFF0;
+    --line-soft:#F0E9F6;
+    --text:#4A4152;
+    --muted:#9891A3;
+    --faint:#C4BCD1;
+    --accent:#C29FD9;
+    --accent-dim:#A97FC7;
+    --up:#7FC3A0;
+    --down:#E39B9B;
+    --t-savings:#A8C3E0;
+    --t-install:#E8CC93;
+    --t-stock:#E3A9BC;
+    --t-fund:#AECB9E;
+    --t-retire:#9FD1D3;
+    --t-child:#F2C49E;
+    --t-etc:#C7BEDB;
+    --radius:18px;
+    --radius-sm:12px;
+    --shadow:0 6px 20px rgba(162,127,199,0.12);
+    --shadow-sm:0 2px 8px rgba(162,127,199,0.10);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    min-height:100vh;
+  }
+  .app{max-width:1180px;margin:0 auto;padding:36px 28px 80px;}
+
+  /* Fund status (top) */
+  .fund-status{
+    border:1px solid var(--line);background:var(--surface);margin-bottom:24px;
+    border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;
+  }
+  .fund-status .fs-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 18px;border-bottom:1px solid var(--line-soft);
+  }
+  .fund-status .fs-head .fs-title{
+    font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);
+  }
+  .fund-status .fs-head .fs-asof{
+    font-size:11px;color:var(--faint);font-family:"SF Mono","Consolas",monospace;
+  }
+  .fund-status .fs-grid{display:grid;grid-template-columns:repeat(3,1fr);}
+  .fund-status .fs-cell{padding:18px 22px;border-right:1px solid var(--line);}
+  .fund-status .fs-cell:last-child{border-right:none;}
+  .fund-status .fs-cell .fs-label{
+    display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-bottom:9px;
+  }
+  .fund-status .fs-cell .fs-label .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .fund-status .fs-cell .fs-val{
+    font-family:"SF Mono","Consolas",monospace;font-size:23px;font-variant-numeric:tabular-nums;
+  }
+  .fund-status .fs-empty{padding:24px;text-align:center;color:var(--faint);font-size:13px;}
+
+  /* Masthead */
+  .masthead{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:1px solid var(--line);
+    padding-bottom:20px;margin-bottom:28px;
+  }
+  .masthead .title{
+    font-size:20px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    color:var(--text);
+    display:flex;align-items:center;gap:8px;
+  }
+  .masthead .title b{color:var(--accent-dim);font-weight:700;}
+  .masthead .sub{
+    font-size:11.5px;color:var(--muted);letter-spacing:0.02em;margin-top:6px;
+  }
+  .ticker{
+    text-align:right;
+  }
+  .ticker .amt{
+    font-family:"SF Mono","Consolas","Courier New",monospace;
+    font-size:26px;font-weight:600;letter-spacing:-0.01em;
+    font-variant-numeric:tabular-nums;
+  }
+  .ticker .delta{
+    font-family:"SF Mono","Consolas","Courier New",monospace;
+    font-size:12px;margin-top:4px;
+  }
+  .sync-row{
+    display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:6px;
+  }
+  .sync-badge{
+    font-size:11px;color:var(--muted);
+  }
+  .sync-badge.saved::before{content:"●";color:var(--up);margin-right:4px;}
+  .sync-badge.saving::before{content:"●";color:var(--accent-dim);margin-right:4px;}
+  .sync-badge.error::before{content:"●";color:var(--down);margin-right:4px;}
+  .sync-badge.loading::before{content:"●";color:var(--accent-dim);margin-right:4px;}
+  .delta.up{color:var(--up);}
+  .delta.down{color:var(--down);}
+  .delta.flat{color:var(--faint);}
+
+  /* Nav */
+  .tabs{
+    display:inline-flex;gap:3px;margin-bottom:24px;
+    background:var(--surface-2);border:1px solid var(--line);
+    border-radius:999px;padding:4px;
+  }
+  .tab-btn{
+    background:none;border:none;color:var(--muted);
+    font-size:12.5px;letter-spacing:0.02em;
+    padding:9px 20px;cursor:pointer;position:relative;
+    font-family:inherit;font-weight:600;
+    border-radius:999px;transition:background 0.15s ease, color 0.15s ease;
+  }
+  .tab-btn:hover{color:var(--text);}
+  .tab-btn.active{color:#FFFFFF;background:var(--accent);box-shadow:var(--shadow-sm);}
+
+  /* Period selector */
+  .period-bar{
+    display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap;
+  }
+  .period-nav{display:flex;align-items:center;gap:10px;}
+  .period-nav button{
+    background:var(--surface);border:1px solid var(--line);color:var(--text);
+    width:28px;height:28px;cursor:pointer;font-size:14px;font-family:inherit;
+    border-radius:999px;box-shadow:var(--shadow-sm);
+  }
+  .period-nav button:hover{border-color:var(--accent-dim);color:var(--accent-dim);}
+  .period-nav .yr{font-size:18px;font-weight:700;letter-spacing:0.01em;min-width:64px;text-align:center;color:var(--text);}
+  .month-grid{display:flex;gap:5px;flex-wrap:wrap;}
+  .month-grid button{
+    background:var(--surface);border:1px solid var(--line);color:var(--muted);
+    font-family:"SF Mono","Consolas",monospace;font-size:11px;
+    width:32px;height:28px;cursor:pointer;position:relative;
+    border-radius:var(--radius-sm);
+  }
+  .month-grid button.has-data::after{
+    content:"";position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
+    width:4px;height:4px;background:var(--accent-dim);border-radius:50%;
+  }
+  .month-grid button:hover{color:var(--text);border-color:var(--accent-dim);}
+  .month-grid button.active{background:var(--accent);color:#FFFFFF;border-color:var(--accent);font-weight:700;box-shadow:var(--shadow-sm);}
+  .month-grid button.active::after{display:none;}
+
+  /* Panels */
+  .panel{background:var(--surface);border:1px solid var(--line);margin-bottom:20px;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+  .panel-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:15px 20px;border-bottom:1px solid var(--line-soft);
+  }
+  .panel-head h2{
+    font-size:13.5px;letter-spacing:0.01em;color:var(--text);
+    font-weight:700;margin:0;display:flex;align-items:center;gap:6px;
+  }
+  .panel-head h2 .hl{font-weight:800;}
+  .panel-head h2 .hl-1{color:var(--accent-dim);}
+  .panel-head h2 .hl-2{color:#6FA98C;}
+  .period-chip{
+    font-size:11.5px;font-weight:600;color:var(--accent-dim);
+    background:var(--surface-2);border:1px solid var(--line);
+    padding:5px 12px;border-radius:999px;
+  }
+  .panel-body{padding:20px;}
+
+  /* Table */
+  table{width:100%;border-collapse:collapse;}
+  th{
+    text-align:left;font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;
+    color:var(--muted);font-weight:700;padding:0 10px 10px;border-bottom:2px solid var(--line-soft);
+  }
+  td{padding:11px 10px;border-bottom:1px solid var(--line-soft);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--surface-2);}
+  td.num,th.num{text-align:right;font-family:"SF Mono","Consolas",monospace;font-variant-numeric:tabular-nums;}
+  td.mono-input input{width:100%;}
+
+  input[type=text],input[type=number]{
+    background:var(--surface-2);border:1.5px solid var(--line);color:var(--text);
+    padding:7px 10px;font-family:inherit;font-size:13px;width:100%;
+    border-radius:var(--radius-sm);
+  }
+  input[type=number],input.amount-input{font-family:"SF Mono","Consolas",monospace;text-align:right;}
+  input:focus{outline:none;border-color:var(--accent);}
+  select{
+    background:var(--surface-2);border:1.5px solid var(--line);color:var(--text);
+    padding:7px 10px;font-family:inherit;font-size:12px;border-radius:var(--radius-sm);
+  }
+
+  .type-chip{
+    display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text);font-weight:500;width:100%;
+  }
+  .type-chip .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
+  .row-handle{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:22px;height:28px;color:var(--faint);font-size:15px;letter-spacing:-1px;
+    cursor:grab;touch-action:none;user-select:none;border-radius:var(--radius-sm);
+  }
+  .row-handle:hover{color:var(--accent-dim);background:var(--surface-2);}
+  tr.dragging{opacity:0.55;background:var(--surface-2);}
+  tr.dragging .row-handle{cursor:grabbing;color:var(--accent-dim);}
+  .asset-name-input{
+    border:1.5px solid transparent;background:transparent;color:var(--text);
+    font-size:12.5px;font-weight:500;padding:5px 7px;border-radius:var(--radius-sm);
+    flex:1;min-width:0;font-family:inherit;
+  }
+  .asset-name-input:hover{background:var(--surface-2);}
+  .asset-name-input:focus{outline:none;background:var(--surface-2);border-color:var(--accent);}
+  select[data-asset-type]{
+    font-size:11.5px;padding:5px 6px;width:100%;
+  }
+
+  .btn{
+    background:none;border:1.5px solid var(--line);color:var(--muted);
+    font-family:inherit;font-size:11.5px;letter-spacing:0.02em;
+    padding:8px 16px;cursor:pointer;border-radius:999px;font-weight:600;
+    transition:transform 0.1s ease;
+  }
+  .btn:hover{color:var(--text);border-color:var(--accent-dim);}
+  .btn:active{transform:scale(0.96);}
+  .btn.primary{background:var(--accent);color:#FFFFFF;border-color:var(--accent);font-weight:700;box-shadow:var(--shadow-sm);}
+  .btn.primary:hover{background:var(--accent-dim);border-color:var(--accent-dim);color:#FFFFFF;}
+  .btn.ghost{border-color:transparent;padding:6px 8px;}
+  .btn.danger:hover{color:var(--down);border-color:var(--down);}
+  .btn.small{padding:5px 10px;font-size:10.5px;}
+
+  .add-row{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;align-items:flex-end;}
+  .add-row .field{display:flex;flex-direction:column;gap:6px;}
+  .add-row .field label{font-size:10.5px;color:var(--muted);letter-spacing:0.02em;font-weight:600;}
+  .add-row .field input, .add-row .field select{width:180px;}
+
+  .empty{
+    text-align:center;padding:50px 20px;color:var(--muted);
+  }
+  .empty .glyph{font-size:26px;margin-bottom:10px;}
+  .empty .msg{font-size:13px;margin-bottom:16px;}
+
+  /* Summary strip */
+  .strip{
+    display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);margin-bottom:20px;background:var(--surface);
+    border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;
+  }
+  .strip .cell{padding:18px 22px;border-right:1px solid var(--line);}
+  .strip .cell:last-child{border-right:none;}
+  .strip .cell .label{font-size:11px;letter-spacing:0.02em;color:var(--muted);margin-bottom:9px;font-weight:600;}
+  .strip .cell .val{font-family:"SF Mono","Consolas",monospace;font-size:20px;font-variant-numeric:tabular-nums;font-weight:600;}
+
+  /* Charts layout */
+  .chart-row{display:grid;grid-template-columns:280px 1fr;gap:20px;}
+  .legend{display:flex;flex-direction:column;gap:10px;justify-content:center;}
+  .legend .li{display:flex;justify-content:space-between;align-items:center;font-size:12px;}
+  .legend .li .name{display:flex;align-items:center;gap:8px;color:var(--muted);}
+  .legend .li .name .dot{width:9px;height:9px;border-radius:50%;}
+  .legend .li .pct{font-family:"SF Mono",monospace;color:var(--text);}
+
+  .bar-chart{width:100%;}
+  .bar-chart .axis-label{fill:var(--muted);font-size:10px;font-family:-apple-system,sans-serif;}
+  .bar-chart .val-label{fill:var(--text);font-size:10px;font-family:"SF Mono",monospace;font-weight:600;}
+
+  footer.note{
+    margin-top:30px;text-align:center;font-size:11.5px;color:var(--muted);letter-spacing:0.01em;
+  }
+
+  @media (max-width:720px){
+    .strip{grid-template-columns:1fr;}
+    .strip .cell{border-right:none;border-bottom:1px solid var(--line);}
+    .strip .cell:last-child{border-bottom:none;}
+    .fund-status .fs-grid{grid-template-columns:1fr;}
+    .fund-status .fs-cell{border-right:none;border-bottom:1px solid var(--line);}
+    .fund-status .fs-cell:last-child{border-bottom:none;}
+    .chart-row{grid-template-columns:1fr;}
+    .app{padding:24px 14px 60px;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="fund-status" id="fundStatus"></div>
+
+  <div class="masthead">
+    <div>
+      <div class="title">🐷 우리집 포트폴리오</div>
+      <div class="sub">저축 · 적금 · 주식을 한눈에 모아보는 우리 가족 자산 노트</div>
+    </div>
+    <div class="ticker">
+      <div class="amt" id="headerTotal">₩0</div>
+      <div class="sync-row">
+        <span class="sync-badge" id="syncBadge"></span>
+        <button class="btn ghost small" id="settingsToggle" title="공유 설정">⚙️ 공유 설정</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="settingsPanel" style="display:none;margin-bottom:20px">
+    <div class="panel-head"><h2>🔗 공유 동기화 설정</h2></div>
+    <div class="panel-body">
+      <p style="font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.6">
+        구글 앱스 스크립트 웹앱 주소를 넣으면, 이 브라우저의 데이터가 그 주소로 저장/불러오기 돼.
+        남편분도 같은 주소를 넣으면 서로 같은 데이터를 보게 돼.
+      </p>
+      <div class="add-row" style="margin-top:0">
+        <div class="field" style="flex:1">
+          <label>웹앱 URL</label>
+          <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/xxxx/exec">
+        </div>
+        <button class="btn primary" id="saveScriptUrlBtn">연결하기</button>
+        <button class="btn" id="clearScriptUrlBtn">연결 해제</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="entry">자산 · 입력</button>
+    <button class="tab-btn" data-tab="yearly">연도별 비교</button>
+  </div>
+
+  <!-- TAB 1: ENTRY -->
+  <section id="tab-entry">
+    <div class="period-bar" id="periodBarEntry">
+      <div class="period-nav">
+        <button id="yrPrevE">‹</button>
+        <div class="yr" id="yrLabelE">2026</div>
+        <button id="yrNextE">›</button>
+      </div>
+      <div class="month-grid" id="monthGridE"></div>
+    </div>
+    <div id="entrySummaryStrip"></div>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>📝 현재 총 <b class="hl hl-1">납입금액</b> &amp; <b class="hl hl-2">평가금액</b></h2>
+        <span class="period-chip" id="entryPeriodLabel"></span>
+      </div>
+      <div class="panel-body">
+        <div id="entryTableWrap"></div>
+        <div class="add-row">
+          <div class="field">
+            <label>자산명</label>
+            <input type="text" id="newName" placeholder="예: 카카오뱅크 자유적금">
+          </div>
+          <div class="field">
+            <label>구분</label>
+            <select id="newType">
+              <option value="저축">저축</option>
+              <option value="적금">적금</option>
+              <option value="주식">주식</option>
+              <option value="펀드">펀드</option>
+              <option value="노후 자금">노후 자금</option>
+              <option value="자녀">자녀</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+          <button class="btn primary" id="addAssetBtn">항목 추가</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: YEARLY -->
+  <section id="tab-yearly" style="display:none">
+    <div id="yearlyContent"></div>
+  </section>
+
+  <footer class="note">모든 데이터는 이 브라우저에 저장됩니다 (localStorage) · 서버로 전송되지 않습니다</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const STORE_KEY = "gagye_portfolio_v1";
+  const SCRIPT_URL_KEY = "gagye_portfolio_script_url";
+  const TYPE_COLORS = {
+    "저축": "var(--t-savings)",
+    "적금": "var(--t-install)",
+    "주식": "var(--t-stock)",
+    "펀드": "var(--t-fund)",
+    "노후 자금": "var(--t-retire)",
+    "자녀": "var(--t-child)",
+    "기타": "var(--t-etc)"
+  };
+  const TYPE_HEX = {
+    "저축":"#A8C3E0","적금":"#E8CC93","주식":"#E3A9BC","펀드":"#AECB9E","노후 자금":"#9FD1D3","자녀":"#F2C49E","기타":"#C7BEDB"
+  };
+
+  const now = new Date();
+  let state = load();
+  migrateAssetStarts();
+  let curYear = now.getFullYear();
+  let curMonth = now.getMonth()+1;
+  let activeTab = "entry";
+  let pendingDeleteId = null;
+  let scriptUrl = localStorage.getItem(SCRIPT_URL_KEY) || "";
+  let syncTimer = null;
+  let syncState = scriptUrl ? "idle" : "off"; // off | idle | saving | saved | loading | error
+
+  // ---------- persistence ----------
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORE_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return { assets: [], records: {} }; // records[year][month][assetId] = {contribution, value}
+  }
+  function save(){
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    scheduleRemoteSave();
+  }
+
+  function scheduleRemoteSave(){
+    if(!scriptUrl) return;
+    if(syncTimer) clearTimeout(syncTimer);
+    setSyncState("saving");
+    syncTimer = setTimeout(async ()=>{
+      try{
+        await fetch(scriptUrl, {
+          method: "POST",
+          headers: {"Content-Type": "text/plain;charset=utf-8"},
+          body: JSON.stringify(state)
+        });
+        setSyncState("saved");
+      }catch(e){
+        setSyncState("error");
+      }
+    }, 700);
+  }
+
+  async function fetchRemoteAndMerge(){
+    if(!scriptUrl) return;
+    setSyncState("loading");
+    try{
+      const res = await fetch(scriptUrl, { method: "GET" });
+      const data = await res.json();
+      if(data && Array.isArray(data.assets) && data.records){
+        state = data;
+        migrateAssetStarts();
+        localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      }
+      setSyncState("saved");
+    }catch(e){
+      setSyncState("error");
+    }
+    renderAll();
+  }
+
+  function setSyncState(s){
+    syncState = s;
+    renderSyncBadge();
+  }
+
+  function ensureBucket(y,m){
+    if(!state.records[y]) state.records[y] = {};
+    if(!state.records[y][m]) state.records[y][m] = {};
+    return state.records[y][m];
+  }
+  function idx(y,m){ return y*12+m; }
+  function monthFromIdx(i){ const y = Math.floor((i-1)/12); const m = i - y*12; return [y,m]; }
+  function isAssetActiveAt(a,y,m){
+    const i = idx(y,m);
+    if(i < idx(a.startY,a.startM)) return false;
+    if(a.endY && a.endM && i > idx(a.endY,a.endM)) return false;
+    return true;
+  }
+
+  // ensure every asset has a startY/startM (the month it should first appear from)
+  function migrateAssetStarts(){
+    let changed = false;
+    state.assets.forEach(a=>{
+      if(typeof a.startY === "number" && typeof a.startM === "number") return;
+      let bestIdx = null, bestY = null, bestM = null;
+      for(const yr in state.records){
+        for(const mo in state.records[yr]){
+          const rec = state.records[yr][mo][a.id];
+          if(rec && (typeof rec.contribution==="number" || typeof rec.value==="number" || typeof rec.deposit==="number")){
+            const i = idx(+yr,+mo);
+            if(bestIdx===null || i<bestIdx){ bestIdx=i; bestY=+yr; bestM=+mo; }
+          }
+        }
+      }
+      if(bestY!==null){ a.startY = bestY; a.startM = bestM; }
+      else { a.startY = now.getFullYear(); a.startM = now.getMonth()+1; }
+      changed = true;
+    });
+    if(changed) save();
+  }
+
+  // generic: latest entered value for a given field, at or before y/m
+  function latestField(assetId, y, m, field){
+    const target = idx(y,m);
+    let best = null, bestIdx = -1;
+    for(const yr in state.records){
+      for(const mo in state.records[yr]){
+        const i = idx(+yr,+mo);
+        if(i <= target){
+          const rec = state.records[yr][mo][assetId];
+          if(rec && typeof rec[field] === "number"){
+            if(i > bestIdx){ bestIdx = i; best = {value: rec[field], y:+yr, m:+mo}; }
+          }
+        }
+      }
+    }
+    return best;
+  }
+
+  // current total contributed (사용자가 직접 입력하는 누계 값), latest entry at or before y/m
+  function currentPrincipal(assetId, y, m){
+    return latestField(assetId, y, m, "contribution");
+  }
+
+  // latest entered value at or before y/m; returns {value, y, m} or null
+  function latestValue(assetId, y, m){
+    return latestField(assetId, y, m, "value");
+  }
+
+  // latest year/month (across all history) that has any entered data
+  function latestGlobalYM(){
+    let bestIdx = -1, best = null;
+    for(const yr in state.records){
+      for(const mo in state.records[yr]){
+        const bucket = state.records[yr][mo];
+        const any = Object.values(bucket).some(r => typeof r.contribution === "number" || typeof r.value === "number" || typeof r.deposit === "number");
+        if(any){
+          const i = idx(+yr,+mo);
+          if(i > bestIdx){ bestIdx = i; best = [+yr, +mo]; }
+        }
+      }
+    }
+    return best;
+  }
+
+  function monthsWithAnyData(y){
+    const set = new Set();
+    if(state.records[y]){
+      for(const mo in state.records[y]){
+        const bucket = state.records[y][mo];
+        const any = Object.values(bucket).some(r => (r.contribution||0)!==0 || typeof r.value==="number" || typeof r.deposit==="number");
+        if(any) set.add(+mo);
+      }
+    }
+    return set;
+  }
+
+  function fmt(n){
+    n = Math.round(n||0);
+    return "₩" + n.toLocaleString("ko-KR");
+  }
+  function fmtPct(n){
+    if(!isFinite(n)) return "—";
+    const s = n>0 ? "+" : "";
+    return s + n.toFixed(1) + "%";
+  }
+  function escapeHtml(str){
+    return String(str)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+  function formatAmount(n){
+    if(n===undefined || n===null || n==="") return "";
+    const num = Number(n);
+    if(isNaN(num)) return "";
+    return num.toLocaleString("ko-KR");
+  }
+  function parseAmount(str){
+    const cleaned = String(str).replace(/[^0-9-]/g,"");
+    if(cleaned === "" || cleaned === "-") return undefined;
+    return Number(cleaned);
+  }
+  function attachAmountFormatting(input){
+    input.addEventListener("input", ()=>{
+      const cursorFromEnd = input.value.length - (input.selectionStart||0);
+      const num = parseAmount(input.value);
+      const formatted = num===undefined ? "" : formatAmount(num);
+      input.value = formatted;
+      const newPos = Math.max(0, formatted.length - cursorFromEnd);
+      try{ input.setSelectionRange(newPos, newPos); }catch(e){}
+    });
+  }
+
+  // ---------- header ticker ----------
+  function computeSnapshot(y,m){
+    let principal=0, value=0;
+    const byType = {};
+    state.assets.forEach(a=>{
+      if(!isAssetActiveAt(a,y,m)) return; // not started yet, or already ended
+      const lp = currentPrincipal(a.id, y, m);
+      const lv = latestValue(a.id, y, m);
+      if(!lp && !lv) return;
+      const p = lp ? lp.value : 0;
+      const v = lv ? lv.value : p; // if no valuation yet, assume principal
+      principal += p; value += v;
+      byType[a.type] = (byType[a.type]||0) + v;
+    });
+    return {principal, value, pnl: value-principal, byType};
+  }
+
+  function prevYM(y,m){ m--; if(m===0){m=12;y--;} return [y,m]; }
+
+  // sums strictly by entered 평가금액(value) — no principal fallback
+  function computeValueByType(y,m){
+    const byType = {};
+    state.assets.forEach(a=>{
+      if(!isAssetActiveAt(a,y,m)) return;
+      const lv = latestValue(a.id, y, m);
+      if(!lv) return;
+      byType[a.type] = (byType[a.type]||0) + lv.value;
+    });
+    return byType;
+  }
+
+  function updateHeader(){
+    const latest = latestGlobalYM();
+    const cur = latest ? computeSnapshot(latest[0], latest[1]) : {value:0};
+    document.getElementById("headerTotal").textContent = fmt(cur.value);
+  }
+
+  function renderFundStatus(){
+    const el = document.getElementById("fundStatus");
+    const latest = latestGlobalYM();
+    if(!latest){
+      el.innerHTML = `<div class="fs-empty">아직 입력된 데이터가 없습니다. 자산 · 입력 탭에서 시작하세요.</div>`;
+      return;
+    }
+    const [y,m] = latest;
+    const byType = computeValueByType(y,m);
+    const excluded = ["노후 자금","자녀"];
+    const savingsTotal = Object.keys(byType)
+      .filter(t=>!excluded.includes(t))
+      .reduce((sum,t)=>sum+byType[t], 0);
+    const cats = [
+      {key:"노후 자금", color: TYPE_HEX["노후 자금"], val: byType["노후 자금"]||0},
+      {key:"자녀", color: TYPE_HEX["자녀"], val: byType["자녀"]||0},
+      {key:"저축", color: TYPE_HEX["저축"], val: savingsTotal}
+    ];
+    const cells = cats.map(c=>{
+      return `<div class="fs-cell">
+        <div class="fs-label"><span class="dot" style="background:${c.color}"></span>${c.key}</div>
+        <div class="fs-val">${fmt(c.val)}</div>
+      </div>`;
+    }).join("");
+    el.innerHTML = `
+      <div class="fs-head">
+        <span class="fs-title">현재 자금 상황</span>
+        <span class="fs-asof">${y}.${String(m).padStart(2,"0")} 기준 (최신)</span>
+      </div>
+      <div class="fs-grid">${cells}</div>
+    `;
+  }
+
+  // ---------- month grid builders ----------
+  function buildMonthGrid(container, year, selectedMonth, onClick){
+    container.innerHTML = "";
+    const withData = monthsWithAnyData(year);
+    for(let m=1;m<=12;m++){
+      const b = document.createElement("button");
+      b.textContent = String(m).padStart(2,"0");
+      if(withData.has(m)) b.classList.add("has-data");
+      if(m===selectedMonth) b.classList.add("active");
+      b.addEventListener("click", ()=>onClick(m));
+      container.appendChild(b);
+    }
+  }
+
+  // ================= TAB 1: ENTRY =================
+  function renderEntryPeriodBar(){
+    document.getElementById("yrLabelE").textContent = curYear + "년";
+    document.getElementById("entryPeriodLabel").textContent = curYear + "년 " + curMonth + "월 기준";
+    buildMonthGrid(document.getElementById("monthGridE"), curYear, curMonth, (m)=>{
+      curMonth = m; pendingDeleteId = null; renderAll();
+    });
+  }
+
+  function renderEntrySummaryStrip(){
+    const el = document.getElementById("entrySummaryStrip");
+    if(state.assets.length===0){ el.innerHTML = ""; return; }
+    const snap = computeSnapshot(curYear, curMonth);
+    el.innerHTML = `<div class="strip">
+      <div class="cell"><div class="label">총 납입금액</div><div class="val" style="color:var(--muted)">${fmt(snap.principal)}</div></div>
+      <div class="cell"><div class="label">총 평가금액</div><div class="val">${fmt(snap.value)}</div></div>
+      <div class="cell"><div class="label">평가손익</div><div class="val" style="color:${snap.pnl>0?'var(--up)':snap.pnl<0?'var(--down)':'var(--text)'}">${snap.pnl>=0?"+":""}${fmt(snap.pnl)}</div></div>
+    </div>`;
+  }
+
+  function pullHiddenAssetsToMonth(){
+    const target = idx(curYear, curMonth);
+    let changed = false;
+    state.assets.forEach(a=>{
+      if(idx(a.startY, a.startM) > target){
+        a.startY = curYear; a.startM = curMonth;
+        changed = true;
+      }
+      if(a.endY && a.endM && idx(a.endY, a.endM) < target){
+        delete a.endY; delete a.endM;
+        changed = true;
+      }
+    });
+    if(changed) save();
+    renderAll();
+  }
+
+  function renderEntryTable(){
+    const wrap = document.getElementById("entryTableWrap");
+    const visibleAssets = state.assets.filter(a => isAssetActiveAt(a, curYear, curMonth));
+    const hiddenCount = state.assets.length - visibleAssets.length;
+    if(state.assets.length===0){
+      wrap.innerHTML = `<div class="empty">
+        <div class="glyph">🐷</div>
+        <div class="msg">등록된 자산이 없습니다. 아래에서 첫 항목을 추가하세요.</div>
+      </div>`;
+      return;
+    }
+    if(visibleAssets.length===0){
+      wrap.innerHTML = `<div class="empty">
+        <div class="glyph">🐷</div>
+        <div class="msg">이 달에는 표시되는 자산이 없습니다.<br>다른 달의 자산을 이 달부터 보이게 당겨오거나, 제외 처리를 되돌릴 수 있어요.</div>
+        <button class="btn primary" id="pullStartBtn">이 달부터 자산 보이게 하기</button>
+      </div>`;
+      const btn = document.getElementById("pullStartBtn");
+      if(btn) btn.addEventListener("click", pullHiddenAssetsToMonth);
+      return;
+    }
+    const bucket = ensureBucket(curYear, curMonth);
+    let rows = "";
+    visibleAssets.forEach(a=>{
+      const rec = bucket[a.id] || {deposit:"", contribution:"", value:""};
+      rows += `<tr data-asset="${a.id}">
+        <td style="width:26px;padding-right:0">
+          <span class="row-handle" title="드래그하여 순서 변경">⠿</span>
+        </td>
+        <td style="min-width:85px">
+          <div class="type-chip">
+            <span class="dot" style="background:${TYPE_COLORS[a.type]||TYPE_COLORS['기타']}"></span>
+            <input type="text" class="asset-name-input" data-asset-name="${a.id}" value="${escapeHtml(a.name)}">
+          </div>
+        </td>
+        <td style="width:96px">
+          <select data-asset-type="${a.id}">
+            ${Object.keys(TYPE_HEX).map(t=>`<option value="${t}" ${t===a.type?"selected":""}>${t}</option>`).join("")}
+          </select>
+        </td>
+        <td class="mono-input" style="width:132px">
+          <input type="text" inputmode="numeric" class="amount-input" placeholder="0" value="${formatAmount(rec.deposit)}" data-field="deposit">
+        </td>
+        <td class="mono-input" style="width:145px">
+          <input type="text" inputmode="numeric" class="amount-input" placeholder="0" value="${formatAmount(rec.contribution)}" data-field="contribution">
+        </td>
+        <td class="mono-input" style="width:145px">
+          <input type="text" inputmode="numeric" class="amount-input" placeholder="0" value="${formatAmount(rec.value)}" data-field="value">
+        </td>
+        <td style="${pendingDeleteId===a.id ? 'width:auto;white-space:nowrap' : 'width:48px'}">
+          ${pendingDeleteId===a.id
+            ? `<div style="display:flex;gap:4px;align-items:center">
+                 <button class="btn small" data-soft-end="${a.id}" title="이번 달부터 제외하고, 이전 기록은 그대로 남겨둡니다" style="border-color:var(--accent-dim);color:var(--accent-dim)">이번달부터 제외</button>
+                 <button class="btn danger small" data-del-confirm="${a.id}" title="자산과 모든 기록을 영구 삭제합니다" style="border-color:var(--down);color:var(--down)">완전삭제</button>
+                 <button class="btn ghost small" data-del-cancel="${a.id}" title="취소">×</button>
+               </div>`
+            : `<button class="btn ghost danger small" data-del="${a.id}">✕</button>`}
+        </td>
+      </tr>`;
+    });
+    const hiddenNote = hiddenCount>0
+      ? `<div style="margin-top:12px;font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:8px">
+          이 달에는 보이지 않는 자산이 ${hiddenCount}개 더 있어요 (다른 달 시작 또는 제외됨).
+          <button class="btn small" id="pullStartBtn2">이 달부터 모두 보이기</button>
+        </div>`
+      : "";
+    wrap.innerHTML = `<table style="table-layout:auto">
+      <thead><tr>
+        <th></th><th>자산명</th><th>구분</th><th>월별 납입금액</th><th>현재 총 납입금액</th><th>현재 총 평가금액</th>
+        <th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>${hiddenNote}`;
+
+    const pullBtn2 = document.getElementById("pullStartBtn2");
+    if(pullBtn2) pullBtn2.addEventListener("click", pullHiddenAssetsToMonth);
+
+    wrap.querySelectorAll("input[data-field]").forEach(inp=>{
+      attachAmountFormatting(inp);
+      inp.addEventListener("change", (e)=>{
+        const tr = e.target.closest("tr");
+        const assetId = tr.getAttribute("data-asset");
+        const field = e.target.getAttribute("data-field");
+        const bucket = ensureBucket(curYear, curMonth);
+        if(!bucket[assetId]) bucket[assetId] = {};
+        const num = parseAmount(e.target.value);
+        bucket[assetId][field] = num;
+        e.target.value = formatAmount(num);
+        save();
+        renderAll();
+      });
+    });
+    wrap.querySelectorAll("[data-asset-name]").forEach(inp=>{
+      inp.addEventListener("change", (e)=>{
+        const id = e.target.getAttribute("data-asset-name");
+        const asset = state.assets.find(x=>x.id===id);
+        const val = e.target.value.trim();
+        if(asset && val){ asset.name = val; save(); }
+        renderAll();
+      });
+    });
+    wrap.querySelectorAll("[data-asset-type]").forEach(sel=>{
+      sel.addEventListener("change", (e)=>{
+        const id = e.target.getAttribute("data-asset-type");
+        const asset = state.assets.find(x=>x.id===id);
+        if(asset){ asset.type = e.target.value; save(); }
+        renderAll();
+      });
+    });
+    wrap.querySelectorAll("[data-del]").forEach(btn=>{
+      btn.addEventListener("click", (e)=>{
+        pendingDeleteId = e.target.getAttribute("data-del");
+        renderEntryTable();
+      });
+    });
+    wrap.querySelectorAll("[data-del-cancel]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        pendingDeleteId = null;
+        renderEntryTable();
+      });
+    });
+    wrap.querySelectorAll("[data-soft-end]").forEach(btn=>{
+      btn.addEventListener("click", (e)=>{
+        const id = e.target.getAttribute("data-soft-end");
+        const asset = state.assets.find(x=>x.id===id);
+        if(asset){
+          const [ey, em] = monthFromIdx(idx(curYear, curMonth) - 1);
+          asset.endY = ey; asset.endM = em;
+          save();
+        }
+        pendingDeleteId = null;
+        renderAll();
+      });
+    });
+    wrap.querySelectorAll("[data-del-confirm]").forEach(btn=>{
+      btn.addEventListener("click", (e)=>{
+        const id = e.target.getAttribute("data-del-confirm");
+        state.assets = state.assets.filter(a=>a.id!==id);
+        for(const y in state.records) for(const m in state.records[y]) delete state.records[y][m][id];
+        pendingDeleteId = null;
+        save(); renderAll();
+      });
+    });
+    attachRowDrag(wrap);
+  }
+
+  // ---------- drag-to-reorder ----------
+  function applyReorder(newOrderIds){
+    const idToAsset = new Map(state.assets.map(a=>[a.id,a]));
+    const visibleIdSet = new Set(newOrderIds);
+    let ptr = 0;
+    state.assets = state.assets.map(a=>{
+      if(visibleIdSet.has(a.id)){
+        const nextId = newOrderIds[ptr++];
+        return idToAsset.get(nextId);
+      }
+      return a;
+    });
+    save();
+  }
+
+  function attachRowDrag(wrap){
+    wrap.querySelectorAll(".row-handle").forEach(handle=>{
+      handle.addEventListener("pointerdown", (e)=>{
+        const tr = handle.closest("tr");
+        const tbody = tr.parentElement;
+        try{ handle.setPointerCapture(e.pointerId); }catch(err){}
+        tr.classList.add("dragging");
+        e.preventDefault();
+
+        function onMove(ev){
+          const rows = [...tbody.querySelectorAll("tr[data-asset]")].filter(r=>r!==tr);
+          const y = ev.clientY;
+          let placed = false;
+          for(const row of rows){
+            const rect = row.getBoundingClientRect();
+            const mid = rect.top + rect.height/2;
+            if(y < mid){
+              tbody.insertBefore(tr, row);
+              placed = true;
+              break;
+            }
+          }
+          if(!placed) tbody.appendChild(tr);
+        }
+        function onUp(ev){
+          try{ handle.releasePointerCapture(e.pointerId); }catch(err){}
+          tr.classList.remove("dragging");
+          window.removeEventListener("pointermove", onMove);
+          window.removeEventListener("pointerup", onUp);
+          const newOrderIds = [...tbody.querySelectorAll("tr[data-asset]")].map(r=>r.getAttribute("data-asset"));
+          applyReorder(newOrderIds);
+          renderAll();
+        }
+        window.addEventListener("pointermove", onMove);
+        window.addEventListener("pointerup", onUp);
+      });
+    });
+  }
+
+  document.getElementById("addAssetBtn").addEventListener("click", ()=>{
+    const nameInp = document.getElementById("newName");
+    const typeInp = document.getElementById("newType");
+    const name = nameInp.value.trim();
+    if(!name) { nameInp.focus(); return; }
+    state.assets.push({ id: "a"+Date.now()+Math.random().toString(36).slice(2,6), name, type: typeInp.value, startY: curYear, startM: curMonth });
+    nameInp.value = "";
+    save(); renderAll();
+  });
+
+  // ================= TAB 2: YEARLY =================
+  function yearsWithData(){
+    const ys = new Set(Object.keys(state.records).map(Number));
+    ys.add(curYear);
+    return Array.from(ys).sort((a,b)=>a-b);
+  }
+
+  function yearEndSnapshot(y){
+    // use latest month within year that has any data; if none, use Dec (may show carried values)
+    const withData = monthsWithAnyData(y);
+    let m = withData.size ? Math.max(...withData) : null;
+    if(m===null){
+      // no direct entries this year — check if any asset had data before/at end of year
+      m = 12;
+      const snap = computeSnapshot(y, m);
+      if(snap.value===0 && snap.principal===0) return null;
+      return {m, ...snap};
+    }
+    return {m, ...computeSnapshot(y,m)};
+  }
+
+  function lineChartYearly(years, snaps){
+    const w = 720, h = 220, padL=54, padR=20, padB=28, padT=18;
+    const maxV = Math.max(1, ...snaps.map(s=>s?s.value:0));
+    const innerW = w-padL-padR, innerH = h-padT-padB;
+    const stepX = years.length>1 ? innerW/(years.length-1) : 0;
+    const xAt = i => years.length>1 ? padL + i*stepX : padL + innerW/2;
+    const yAt = v => h-padB-(v/maxV)*innerH;
+
+    // gridlines
+    let grid = "";
+    for(let g=0; g<=4; g++){
+      const gy = padT + innerH*(g/4);
+      grid += `<line x1="${padL}" y1="${gy}" x2="${w-padR}" y2="${gy}" stroke="#E7DFF0"/>`;
+    }
+
+    function pathFor(getVal, dashed){
+      let d = "";
+      years.forEach((y,i)=>{
+        const s = snaps[i];
+        if(!s) return;
+        const px = xAt(i), py = yAt(getVal(s));
+        d += (d===""? "M":"L") + px.toFixed(1) + " " + py.toFixed(1) + " ";
+      });
+      return `<path d="${d.trim()}" fill="none" stroke="${dashed?'#9891A3':'#C29FD9'}" stroke-width="2.5" ${dashed?'stroke-dasharray="4 4"':''}/>`;
+    }
+
+    const valuePath = pathFor(s=>s.value, false);
+    const principalPath = pathFor(s=>s.principal, true);
+
+    let dots = "", labels = "";
+    years.forEach((y,i)=>{
+      const s = snaps[i];
+      const x = xAt(i);
+      labels += `<text class="axis-label" x="${x}" y="${h-padB+16}" text-anchor="middle">${y}</text>`;
+      if(!s) return;
+      const vy = yAt(s.value);
+      dots += `<circle cx="${x}" cy="${vy}" r="3.5" fill="#C29FD9"/>`;
+      labels += `<text class="val-label" x="${x}" y="${vy-9}" text-anchor="middle">${s.value?Math.round(s.value/10000).toLocaleString():""}만</text>`;
+      const py = yAt(s.principal);
+      dots += `<circle cx="${x}" cy="${py}" r="3" fill="#9891A3"/>`;
+    });
+
+    return `<svg class="bar-chart" viewBox="0 0 ${w} ${h}">${grid}${principalPath}${valuePath}${dots}${labels}</svg>`;
+  }
+
+  function stackedByTypeChart(years, snaps){
+    const w = 720, h = 200, padL=50, padR=20, padB=26, padT=14;
+    const types = Object.keys(TYPE_HEX).filter(t => snaps.some(s => s && (s.byType[t]||0) > 0));
+    const maxV = Math.max(1, ...snaps.map(s=> s ? Object.values(s.byType).reduce((a,b)=>a+b,0) : 0));
+    const innerH = h-padT-padB;
+    const bw = (w-padL-padR)/years.length;
+
+    let grid = "";
+    for(let g=0; g<=4; g++){
+      const gy = padT + innerH*(g/4);
+      grid += `<line x1="${padL}" y1="${gy}" x2="${w-padR}" y2="${gy}" stroke="#E7DFF0"/>`;
+    }
+
+    let bars = "", labels = "";
+    years.forEach((y,i)=>{
+      const s = snaps[i];
+      const x = padL + i*bw + bw*0.18;
+      const bwi = bw*0.64;
+      let yAcc = h-padB;
+      if(s){
+        types.forEach(t=>{
+          const v = s.byType[t]||0;
+          if(v<=0) return;
+          const hh = (v/maxV)*innerH;
+          bars += `<rect x="${x}" y="${(yAcc-hh).toFixed(1)}" width="${bwi.toFixed(1)}" height="${hh.toFixed(1)}" fill="${TYPE_HEX[t]}"/>`;
+          yAcc -= hh;
+        });
+      }
+      labels += `<text class="axis-label" x="${(x+bwi/2).toFixed(1)}" y="${h-padB+16}" text-anchor="middle">${y}</text>`;
+    });
+
+    return `<svg class="bar-chart" viewBox="0 0 ${w} ${h}">${grid}${bars}${labels}</svg>`;
+  }
+
+  function renderYearlyContent(){
+    const el = document.getElementById("yearlyContent");
+    if(state.assets.length===0){
+      el.innerHTML = `<div class="panel"><div class="panel-body"><div class="empty">
+        <div class="glyph">🐷</div><div class="msg">자산·입력 탭에서 항목을 먼저 추가하세요.</div>
+      </div></div></div>`;
+      return;
+    }
+    const years = yearsWithData();
+    const snaps = years.map(yearEndSnapshot);
+
+    let rows = years.map((y,i)=>{
+      const s = snaps[i];
+      if(!s) return `<tr><td>${y}</td><td colspan="4" style="color:var(--faint)">데이터 없음</td></tr>`;
+      const py = years[i-1];
+      const ps = py!==undefined ? snaps[i-1] : null;
+      const diff = ps ? s.value - ps.value : null;
+      const pnlPct = s.principal ? (s.value-s.principal)/s.principal*100 : 0;
+      return `<tr>
+        <td>${y} <span style="color:var(--faint);font-size:11px">(${s.m}월 기준)</span></td>
+        <td class="num" style="color:var(--muted)">${fmt(s.principal)}</td>
+        <td class="num">${fmt(s.value)}</td>
+        <td class="num" style="color:${s.value-s.principal>0?'var(--up)':s.value-s.principal<0?'var(--down)':'var(--muted)'}">${fmtPct(pnlPct)}</td>
+        <td class="num" style="color:${diff===null?'var(--faint)':diff>0?'var(--up)':diff<0?'var(--down)':'var(--muted)'}">${diff===null?"—":(diff>=0?"+":"")+fmt(diff)}</td>
+      </tr>`;
+    }).join("");
+
+    el.innerHTML = `
+      <div class="panel">
+        <div class="panel-head"><h2>연도별 총자산 추이</h2></div>
+        <div class="panel-body">${lineChartYearly(years, snaps)}
+          <div style="margin-top:8px;font-size:11px;color:var(--faint);display:flex;gap:18px">
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#C29FD9;margin-right:5px"></span>평가금액</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;border:1px dashed #9891A3;margin-right:5px"></span>총 납입금액</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>구분별 구성 변화</h2></div>
+        <div class="panel-body">${stackedByTypeChart(years, snaps)}
+          <div style="margin-top:8px;font-size:11px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap">
+            ${Object.keys(TYPE_HEX).filter(t=>snaps.some(s=>s&&(s.byType[t]||0)>0)).map(t=>`<span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${TYPE_HEX[t]};margin-right:5px"></span>${t}</span>`).join("")}
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>연도별 비교표</h2></div>
+        <div class="panel-body">
+          <table>
+            <thead><tr><th>연도</th><th class="num">총 납입금액</th><th class="num">평가금액</th><th class="num">수익률</th><th class="num">전년대비</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  // ================= TAB SWITCHING =================
+  document.querySelectorAll(".tab-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      activeTab = btn.getAttribute("data-tab"); pendingDeleteId = null;
+      document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active", b===btn));
+      document.getElementById("tab-entry").style.display = activeTab==="entry" ? "" : "none";
+      document.getElementById("tab-yearly").style.display = activeTab==="yearly" ? "" : "none";
+      renderAll();
+    });
+  });
+
+  document.getElementById("yrPrevE").addEventListener("click", ()=>{ curYear--; pendingDeleteId = null; renderAll(); });
+  document.getElementById("yrNextE").addEventListener("click", ()=>{ curYear++; pendingDeleteId = null; renderAll(); });
+
+  // ================= SYNC / SHARING SETTINGS =================
+  function renderSyncBadge(){
+    const badge = document.getElementById("syncBadge");
+    if(!badge) return;
+    const labels = {
+      off: "이 브라우저에만 저장 중",
+      idle: "공유 연결됨",
+      saving: "저장 중...",
+      saved: "공유 저장됨",
+      loading: "불러오는 중...",
+      error: "동기화 오류 (연결 확인)"
+    };
+    badge.className = "sync-badge " + syncState;
+    badge.textContent = labels[syncState] || "";
+  }
+
+  document.getElementById("settingsToggle").addEventListener("click", ()=>{
+    const panel = document.getElementById("settingsPanel");
+    const willShow = panel.style.display === "none";
+    panel.style.display = willShow ? "" : "none";
+    if(willShow) document.getElementById("scriptUrlInput").value = scriptUrl;
+  });
+
+  document.getElementById("saveScriptUrlBtn").addEventListener("click", async ()=>{
+    const url = document.getElementById("scriptUrlInput").value.trim();
+    if(!url) return;
+    scriptUrl = url;
+    localStorage.setItem(SCRIPT_URL_KEY, url);
+    setSyncState("loading");
+    await fetchRemoteAndMerge();
+    scheduleRemoteSave();
+  });
+
+  document.getElementById("clearScriptUrlBtn").addEventListener("click", ()=>{
+    scriptUrl = "";
+    localStorage.removeItem(SCRIPT_URL_KEY);
+    document.getElementById("scriptUrlInput").value = "";
+    setSyncState("off");
+  });
+
+  function renderAll(){
+    updateHeader();
+    renderFundStatus();
+    renderSyncBadge();
+    if(activeTab==="entry"){ renderEntryPeriodBar(); renderEntrySummaryStrip(); renderEntryTable(); }
+    if(activeTab==="yearly"){ renderYearlyContent(); }
+  }
+
+  renderAll();
+  if(scriptUrl) fetchRemoteAndMerge();
+})();
+</script>
+</body>
+</html>
