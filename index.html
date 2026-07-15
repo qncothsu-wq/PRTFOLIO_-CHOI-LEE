@@ -405,7 +405,8 @@
   let curMonth = now.getMonth()+1;
   let activeTab = "entry";
   let pendingDeleteId = null;
-  let scriptUrl = localStorage.getItem(SCRIPT_URL_KEY) || "";
+  const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhQyZw21j5t0oMShf5ZDg-gane9c_froQP7Ezt55aNBJQjLee17OY_QYMOHLqqWJQM/exec";
+  let scriptUrl = localStorage.getItem(SCRIPT_URL_KEY) || DEFAULT_SCRIPT_URL;
   let syncTimer = null;
   let syncState = scriptUrl ? "idle" : "off"; // off | idle | saving | saved | loading | error
 
